@@ -1,0 +1,103 @@
+<%- include('layouts/top.ejs') %>.
+  <div class="container mt-5">
+    <% posts.forEach(function(post){ %>
+
+      <div class="card mb-3">
+        <% if (post.image) {%>
+          <img src="http://127.0.0.1:3000/posts/image/<%= post._id %>" <div class="card-img-top" height="300px">
+          <% } else { %>
+            <img src="images.jpg" class="card-img-top" height="300px" width="300px">
+            <% } %>
+              <div class="card-body">
+                <h5 class="card-title">
+                  <%= post.title %>
+                </h5>
+                <p class="card-text">
+                  <%= post.body %>
+                </p>
+                <p class="card-text"><small class="text-muted">
+                    <small class="text-muted">Written By: <%= post.author.firstname %></small>
+                    <button class="btn btn-primary hi" onclick="check_follow(event)" value=<%=post.author._id %>>
+                      <% if(user.is_followed(post.author._id)) { %>
+                        UnFollow
+                        <% } else { %>
+                          Follow
+                          <% } %>
+                    </button>
+                    <br>
+                    <%= post.createdAt %>
+                  </small></p>
+              </div>
+      </div>
+  </div>
+  <script>
+
+    // var follows = document.getElementsByClassName('follow')
+    // console.log(follows.length)
+    // for (let i = 0; i < follows.length; i++) {
+    //   follows[i].addEventListener('click', check_follow)
+    // }
+
+    // let lol = document.querySelectorAll('[value="607cb5f4651e5049b0a3a85e"]')
+    // for (let i = 0; i < btns < length; i++) {
+    //   btns[i].innerHTML = "unFollow"
+    // }
+
+    function check_follow(e) {
+      var xhr = new XMLHttpRequest()
+
+      xhr.open('GET', `/users/${e.target.value}/follow`, true)
+
+      console.log(e)
+
+      xhr.setRequestHeader(
+        "Content-Type",
+        "application/x-www-form-urlencoded"
+      );
+      xhr.setRequestHeader(
+        "Authorization",
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MDdjYjVmYTY1MWU1MDQ5YjBhM2E4NWYiLCJpYXQiOjE2MTg5NTEzNTh9.TZglYoaAp2Vr4ewLXf8XIwIj1zShNcgoMPUbKuEooW8"
+      );
+
+      xhr.onload = function () {
+        if (this.status == 200) {
+          let btns = document.querySelectorAll('[value="607cb5f4651e5049b0a3a85e"]')
+          str = ''
+          if (this.responseText == "true") {
+            str = "UnFollow"
+          }
+          else if (this.responseText == "false") {
+            str = "Follow"
+          }
+          for (let i = 0; i < btns.length; i++) {
+            btns[i].innerHTML = str
+          }
+
+        }
+      }
+
+      xhr.send(e.id);
+    }
+    // function myimage(e) {
+    //   console.log(e.id)
+    //   var xhr = new XMLHttpRequest()
+    //   xhr.open('GET', `/posts/image/${e.id}`, true)
+
+    //   xhr.setRequestHeader(
+    //     "Content-Type",
+    //     "application/x-www-form-urlencoded"
+    //   );
+
+    //   xhr.onload = function () {
+    //     if (this.status == 200) {
+    //       console.log(this.responseText)
+    //       e.src = this.responseText
+    //     }
+    //   }
+
+    //   xhr.send(e.id);
+    // }
+  </script>
+  <% }) %>
+    </div>
+    <%- include('layouts/bot.ejs') %>.

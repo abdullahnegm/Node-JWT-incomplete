@@ -1,0 +1,185 @@
+<%- include('layouts/top.ejs') %>
+
+    <div class="container">
+
+        <div id="wrapper" class="text-center p-4">
+
+            <section id="register_section">
+                <form method="POST" action="/user/register" id="register_form" class="form text-center">
+
+                    <h2 class="mb-3">Sign Up for Free</h2>
+
+                    <input type="text" id="fname" name="username" class="form-control name mb-3" placeholder="Username"
+                        required />
+
+                    <input type="text" id="password" name="password" class="form-control mb-3" placeholder="Password"
+                        required />
+
+                    <input type="text" name="address" id="address" class="form-control mb-3" placeholder="Address"
+                        required />
+
+
+                    <input type="email" name="email" id="email" class="form-control mb-3" placeholder="Email Address"
+                        required />
+
+                    <input type="text" name="age" id="age" class="form-control mb-3" placeholder="Age" required />
+
+                    <input id="submit_register" type="submit" class="btn btn-primary form-control p-1"
+                        value="Sign Up" />
+
+                </form>
+            </section>
+
+        </div>
+
+    </div>
+
+    <script>
+
+
+        form = document.getElementById("register_form");
+        register_section = document.getElementById("register_section");
+
+        // Get Username and add listeners
+        fname = document.getElementById("fname");
+        fname.addEventListener("blur", fname_fun);
+        name_regex = new RegExp("^[A-Za-z]+$");
+
+        // Get E-mail and add listeners
+        email = document.getElementById("email");
+        email.addEventListener('blur', email_fun)
+        email_regex = new RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)
+
+        // Get Password and add listeners
+        password = document.getElementById('password')
+        password.addEventListener('blur', password_fun)
+
+        // Get Password and add listeners
+        age = document.getElementById('age')
+        age.addEventListener('blur', age_fun)
+
+        // Get address and add listeners
+        address = document.getElementById("address");
+        address.addEventListener("blur", address_fun);
+        address_regex = new RegExp("^[a-zA-Z0-9 ]+$");
+
+        // Get age and add listeners
+        age = document.getElementById("age");
+        age.addEventListener("blur", age_fun);
+
+        // On submit check all fields --> continue if validate info entered
+        submit = document.getElementById("submit_register");
+        submit.addEventListener("click", submit_register);
+
+
+        function fname_fun() {
+            if (!name_regex.test(fname.value)) {
+                fname.classList.remove("is-valid")
+                fname.classList.add("is-invalid")
+                // fname.focus()
+            } else {
+                fname.classList.add("is-valid")
+                fname.classList.remove("is-invalid")
+            }
+        }
+
+        function password_fun() {
+            if (password.value.length < 8 || password.value.length > 20) {
+                password.classList.remove("is-valid")
+                password.classList.add("is-invalid")
+            } else {
+                password.classList.add("is-valid")
+                password.classList.remove("is-invalid")
+            }
+        }
+
+        function age_fun() {
+            if (age.value >= 18) {
+                age.classList.remove("is-valid")
+                age.classList.add("is-invalid")
+            } else {
+                age.classList.add("is-valid")
+                age.classList.remove("is-invalid")
+            }
+        }
+
+        function email_fun() {
+            if (!email_regex.test(email.value)) {
+                address.classList.remove("is-valid");
+                address.classList.add("is-invalid");
+            } else {
+                address.classList.add("is-valid");
+                address.classList.remove("is-invalid");
+            }
+        }
+
+        function address_fun() {
+            if (!address_regex.test(address.value)) {
+                address.classList.remove("is-valid");
+                address.classList.add("is-invalid");
+                // address.focus()
+            } else {
+                address.classList.add("is-valid");
+                address.classList.remove("is-invalid");
+            }
+        }
+
+        function age_fun() {
+            if (Number(age.value) < 18) {
+                age.classList.remove("is-valid");
+                age.classList.add("is-invalid");
+                // age.focus()
+            } else {
+                age.classList.add("is-valid");
+                age.classList.remove("is-invalid");
+            }
+        }
+
+        function submit_register(e) {
+            if (
+                !Number.isInteger(Number(age.value)) ||
+                (20 < password.value.length || password.value.length < 8) ||
+                Number(age.value) < 18 ||
+                !address_regex.test(address.value) ||
+                !email_regex.test(email.value) ||
+                !name_regex.test(fname.value)
+            ) {
+                e.preventDefault()
+                console.log("WHY")
+                if (!name_regex.test(fname.value)) {
+                    console.log("name")
+                    fname.focus();
+                    fname_fun();
+                } else if (!address_regex.test(address.value)) {
+                    console.log("address")
+                    address.focus();
+                    address_fun();
+                } else if (!email_regex.test(email.value)) {
+                    console.log("email")
+                    email.focus();
+                    email_fun();
+                } else if (21 < password.value.length || password.value.length < 7) {
+                    console.log("password")
+                    password.focus();
+                    password_fun();
+                } else if (!Number.isInteger(Number(age.value)) || Number(age.value) < 18) {
+                    console.log("age")
+                    age.focus();
+                    age_fun();
+                }
+            } else {
+                var xhr = new XMLHttpRequest()
+                xhr.open("POST", "/user/register", true)
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+
+                xhr.onload = function () {
+                    if (this.status == 200) {
+
+                    }
+                }
+            }
+        }
+
+    </script>
+
+    <%- include('layouts/bot.ejs') %>

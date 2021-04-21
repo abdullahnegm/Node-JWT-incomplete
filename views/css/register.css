@@ -1,0 +1,65 @@
+body {
+  background-color: #c1bdba;
+}
+
+#span {
+  display: none;
+}
+
+.reglog_buttons {
+  background-color: #a0b3b0;
+  width: 200px;
+  border-radius: 0px;
+  color: grey;
+  padding: 8px;
+}
+
+.active {
+  background-color: #1ab188;
+  color: white;
+}
+
+#wrapper {
+  background-color: rgba(19, 35, 47, 0.9);
+  width: 500px;
+  margin: 130px auto;
+  box-shadow: 5px 10px #888888;
+}
+
+section {
+  padding: 20px 10px;
+}
+
+#login_section {
+  display: none;
+}
+
+h2 {
+  color: white;
+}
+
+input[type="submit"] {
+  background-color: #1ab188;
+  color: white;
+  font-size: 20px;
+}
+
+input.form-control:focus {
+  background-color: transparent;
+  color: white;
+}
+
+input[type="submit"].form-control:focus {
+  background-color: #1ab188;
+}
+
+.form-control,
+input[type="email"].form-control {
+  background-color: rgba(19, 35, 47, 0.9);
+  color: white;
+}
+
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 20px rgba(19, 35, 47, 0.9) inset !important;
+  color: white;
+}

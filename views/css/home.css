@@ -1,0 +1,16 @@
+body {
+  background-color: #edf3f3;
+  color: black;
+}
+
+.navbar {
+  background-image: linear-gradient(#9b9b9b, #333);
+}
+
+a {
+  color: red;
+}
+
+.card-img-top {
+  width: 50%;
+}
