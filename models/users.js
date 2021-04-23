@@ -19,6 +19,12 @@ const userSchema = mongoose.Schema({
   tokens: [{ token: { type: String } }],
 });
 
+userSchema.virtual("posts", {
+  ref: "Posts",
+  localField: "_id",
+  foreignField: "author",
+});
+
 userSchema.methods.toJSON = function () {
   let user = this.toObject();
   delete user.password;

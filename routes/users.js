@@ -5,8 +5,8 @@ const userRoute = express();
 const Users = require("../models/users");
 
 // Require ejs template engine
-// const ejs = require("ejs");
-// userRoute.set("view engine", "ejs");
+const ejs = require("ejs");
+userRoute.set("view engine", "ejs");
 
 // Validation
 const userSchema = require("../validation/user");
@@ -14,32 +14,35 @@ const validator = require("express-joi-validation").createValidator({});
 
 // Middlewares
 const Auth = require("../middlewares/authMiddleware");
+const isAuth = require("../middlewares/isAuthenticated");
+const isNotAuth = require("../middlewares/isNotAuthenticated");
 
 // Authentication using Passport
 const passport = require("passport");
 
-const initializePassport = require("./helpers/passport-config");
+const initializePassport = require("../helpers/passport-config");
 initializePassport(passport);
 
 const flash = require("express-flash");
 const session = require("express-session");
 
-app.use(flash());
-app.use(session());
-
-app.use(passport.initialize());
-app.use(
-  passport.session({
+userRoute.use(flash());
+userRoute.use(
+  session({
     secret: process.env.SECRET,
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
   })
 );
 
-var bodyParser = require("body-parser");
+userRoute.use(passport.initialize());
+userRoute.use(passport.session());
 
-userRoute.use(bodyParser.json());
-userRoute.use(bodyParser.urlencoded({ extended: true }));
+userRoute.use(express.urlencoded({ extended: false }));
+
+userRoute.get("/login", isNotAuth, (req, res) => {
+  return res.render("login");
+});
 
 userRoute.get("/", async (req, res, next) => {
   try {
@@ -50,23 +53,39 @@ userRoute.get("/", async (req, res, next) => {
   }
 });
 
-userRoute.get("/register", (req, res) => {
+userRoute.get("/register", isNotAuth, (req, res) => {
+  console.log("3");
   return res.render("register");
 });
 
-app.post(
+userRoute.post(
   "/login",
-  passport.authenticate("local", { failureRedirect: "/login" }),
-  function (req, res) {
-    res.redirect("/");
-  }
+  passport.authenticate("local", {
+    successRedirect: "/posts",
+    failureRedirect: "/users/login",
+    failureFlash: true,
+  })
 );
 
-// userRoute.get("/login", (req, res) => {
-//   return res.render("login");
-// });
+userRoute.post("/register", async (req, res, next) => {
+  console.log("7");
+  try {
+    let validationResult = userSchema.validate(req.body);
+    if (validationResult.error) return res.status(400).render("register");
+    let email = await Users.findOne({ email: req.email });
+    if (email)
+      res.render("register", { ...req.body, error: "Email already exists" });
+
+    await Users.create(req.body);
+
+    return res.redirect("/users/login");
+  } catch (e) {
+    next(e);
+  }
+});
 
 userRoute.get("/:id", async (req, res, next) => {
+  console.log("5");
   try {
     let id = req.params.id;
     let user = await Users.findById(id);
@@ -77,6 +96,7 @@ userRoute.get("/:id", async (req, res, next) => {
 });
 
 userRoute.get("/profile", Auth, async (req, res, next) => {
+  console.log("6");
   try {
     return res.send(req.user);
   } catch (e) {
@@ -96,20 +116,8 @@ userRoute.get("/profile", Auth, async (req, res, next) => {
 
 //  validator.body(userSchema),
 
-userRoute.post("/register", async (req, res, next) => {
-  try {
-    let validationResult = userSchema.validate(req.body);
-    if (validationResult.error) return res.status(400).render("register");
-
-    let user = await Users.create(req.body);
-
-    return res.send("User Register Succesfully");
-  } catch (e) {
-    next(e);
-  }
-});
-
 userRoute.delete("/:id", async (req, res, next) => {
+  console.log("8");
   try {
     await req.user.remove();
     return res.send(req.user);
@@ -119,6 +127,7 @@ userRoute.delete("/:id", async (req, res, next) => {
 });
 
 userRoute.patch("/:id", async (req, res, next) => {
+  console.log("9");
   const allowed_inputs = ["username", "password", "firstname"];
   const keys = Object.keys(req.body);
   const isIncluded = keys.every((key) => allowed_inputs.includes(key));
@@ -134,12 +143,14 @@ userRoute.patch("/:id", async (req, res, next) => {
   }
 });
 
-userRoute.get("/:id/isfollowed", Auth, (req, res) => {
+userRoute.get("/:id/isfollowed", (req, res) => {
+  console.log("10");
   req.user.is_followed(req.params.id);
   return res.send("lol");
 });
 
-userRoute.get("/:id/follow", Auth, async (req, res, next) => {
+userRoute.get("/:id/follow", async (req, res, next) => {
+  console.log("11");
   let id = req.params.id;
 
   try {
@@ -154,6 +165,7 @@ userRoute.get("/:id/follow", Auth, async (req, res, next) => {
 });
 
 userRoute.use((err, req, res, next) => {
+  console.log("12");
   if (err == 1) return res.status(404).send("This user doesn't exist");
   return res.status(500).send(err);
 });

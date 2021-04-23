@@ -1,6 +1,8 @@
 const express = require("express");
 const postRoutes = express();
-require("express-reverse")(postRoutes);
+
+var methodOverride = require("method-override");
+postRoutes.use(methodOverride("_method"));
 
 const path = require("path");
 
@@ -14,6 +16,9 @@ const validator = require("express-joi-validation").createValidator({});
 
 // Middlewares
 const Auth = require("../middlewares/authMiddleware");
+const isAuth = require("../middlewares/isAuthenticated");
+const isNotAuth = require("../middlewares/isNotAuthenticated");
+const Paginate = require("../middlewares/pagination");
 
 postRoutes.use(express.json());
 
@@ -28,6 +33,7 @@ const bodyParser = require("body-parser");
 postRoutes.use(bodyParser.urlencoded({ extended: true }));
 
 postRoutes.get("/image/:id", async (req, res, next) => {
+  console.log("Here 1");
   try {
     let id = req.params.id;
     let post = await Posts.findById(id);
@@ -40,37 +46,57 @@ postRoutes.get("/image/:id", async (req, res, next) => {
 });
 
 postRoutes.post("/photo", upload.single("avatar"), async (req, res, next) => {
-  let post = await Posts.findById("607db54a3ff09b0c4cb6bcae");
-  post.image = req.file.buffer;
-  await post.save();
+  console.log("Here 2");
+  let post = await Posts.findById(req.body._id);
+  await post.saveImage(req.file.buffer);
   return res.set("Content-Type", "image/jpg").send(req.file.buffer);
 });
 
-postRoutes.get("home", "/", async (req, res, next) => {
-  let user = await Users.findOne({ _id: "607cb5fa651e5049b0a3a85f" });
+postRoutes.get("/", Paginate(Posts), async (req, res, next) => {
   try {
-    let posts = await Posts.find({}).populate("author").exec();
-    return res.render("home", { posts, user });
-    // return res.render("home", { posts, user: req.user });
+    if (req.user)
+      return res.render("home", {
+        posts: res.paginatedResults,
+        user: req.user,
+      });
+    return res.render("home", { posts: res.paginatedResults });
   } catch (e) {
     next(e);
   }
 });
 
-// postRoutes.get("/", async (req, res, next) => {
-//   try {
-//     let posts = await Posts.find({});
-//     res.send(posts);
-//   } catch (e) {
-//     next(e);
-//   }
-// });
+postRoutes.get(
+  "/follows",
+  isAuth,
+  Paginate(Posts, (limited = true)),
+  async (req, res, next) => {
+    try {
+      console.log(req.user.follows);
+
+      return res.render("home", {
+        posts: res.paginatedResults,
+        user: req.user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+postRoutes.get("/create", isAuth, (req, res, next) => {
+  console.log("create post");
+  return res.render("create");
+});
 
 postRoutes.get("/:id", async (req, res, next) => {
+  console.log("Here 4");
   try {
     let id = req.params.id;
-    await Posts.findById(id);
-    return res.send(post);
+    let post = await Posts.findById(id).populate("author").exec();
+    console.log(post);
+    console.log(req.user);
+    if (req.user) return res.render("details", { post, user: req.user });
+    return res.render("details", { post });
   } catch (e) {
     next(1);
   }
@@ -78,36 +104,54 @@ postRoutes.get("/:id", async (req, res, next) => {
 
 postRoutes.post(
   "/",
-  Auth,
-  validator.body(postSchema),
+  isAuth,
+  upload.single("avatar"),
   async (req, res, next) => {
+    console.log("Here 5");
     try {
-      let post = await Posts.create({ ...req.body, author: req.user._id });
+      var { title, body, tags } = req.body;
+      if (tags) tags = tags.split(",");
+      else tags = [];
+      let validationResult = postSchema.validate({ title, body, tags });
+      if (validationResult.error)
+        return res.status(400).send(validationResult.error);
+      // if (validationResult.error) return res.status(400).render("create");
 
-      res.send({ post });
+      let post = await Posts.create({
+        title,
+        body,
+        tags,
+        author: req.user._id,
+      });
+
+      if (req.file) await post.saveImage(req.file.buffer);
+
+      return res.redirect("/posts");
     } catch (e) {
       next(e);
     }
   }
 );
 
-postRoutes.delete("/:id", Auth, async (req, res, next) => {
+postRoutes.delete("/:id", async (req, res, next) => {
+  console.log("Here 6");
   try {
     let id = req.params.id;
 
-    let post = await Posts.findOne({ _id: id });
-    if (!post) next(1);
+    let post = await Posts.findOne({ _id: id }).populate("author").exec();
+    if (!post) return next(1);
 
-    if (post.author.toString() != req.user._id) next(2);
+    if (post.author._id.toString() != req.user._id) next(2);
 
     await post.remove();
-    return res.send(post);
+    return res.redirect("/posts");
   } catch (e) {
     next(e);
   }
 });
 
-postRoutes.patch("/:id", Auth, async (req, res, next) => {
+postRoutes.patch("/:id", async (req, res, next) => {
+  console.log("Here 7");
   const allowed_inputs = ["title", "body", "author", "tags"];
   const keys = Object.keys(req.body);
   const isIncluded = keys.every((key) => allowed_inputs.includes(key));
@@ -133,6 +177,7 @@ postRoutes.patch("/:id", Auth, async (req, res, next) => {
 });
 
 postRoutes.use((err, req, res, next) => {
+  console.log("Here 8");
   if (err == 1) return res.status(404).send("This post doesn't exist");
   if (err == 2) return res.status(403).send("You are not Authorized");
   return res.status(500).send(err);

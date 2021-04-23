@@ -4,23 +4,25 @@
 
         <div id="wrapper" class="text-center p-4">
 
-            <div class="btn-group mb-3">
-                <input type="button" id="register" class="btn active reglog_buttons" value="Sign Up" />
-                <input type="button" id="login" class="btn reglog_buttons" value="Login" />
-            </div>
-
             <section id="login_section">
-                <form action="./confirm.html" class="form text-center p-4">
+                <form action="/users/login" method="POST" class="form text-center p-4">
 
                     <h2 class="mb-3">Welcome Back!</h2>
 
-                    <span id="span" style="color: white;" class="form-control mb-2 bg-warning"></span>
+                    <% if(messages.error) { %>
+                        <span id="span" style="color: white;" class="form-control mb-2 bg-warning">
+                            <%= messages.error %>
+                        </span>
+                        <% } %>
 
-                    <input type="text" id="username" class="form-control mb-3" placeholder="First Name" required />
 
-                    <input type="password" id="password" class="form-control mb-3" placeholder="Password" required />
+                            <input type="email" id="email" name="email" class="form-control mb-3" placeholder="email"
+                                required />
 
-                    <input type="submit" id="submit_login" class="btn form-control p-1" value="Log In" />
+                            <input type="password" name="password" id="password" class="form-control mb-3"
+                                placeholder="Password" value="12345678" required />
+
+                            <input type="submit" id="submit_login" class="btn form-control p-1" value="Log In" />
 
                 </form>
             </section>

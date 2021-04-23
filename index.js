@@ -10,6 +10,31 @@ require("./helpers/connectToDB");
 const ejs = require("ejs");
 app.set("view engine", "ejs");
 
+// #########################################################
+// #########################################################
+// Authentication using Passport
+const passport = require("passport");
+
+const initializePassport = require("./helpers/passport-config");
+initializePassport(passport);
+
+const flash = require("express-flash");
+const session = require("express-session");
+
+app.use(flash());
+app.use(
+  session({
+    secret: process.env.SECRET,
+    resave: true,
+    saveUninitialized: true,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+// #########################################################
+// #########################################################
+
 app.set(express.json());
 
 // Import Routes
